@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" 
     package="com.example.ble">
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
@@ -32,4 +32,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+
+ 
 </manifest>
