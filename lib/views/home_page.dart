@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:ble/views/find_device_screen.dart';
+import 'package:ble/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
@@ -21,7 +23,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List<BluetoothService> _services;
 
   _addDeviceTolist(final BluetoothDevice device) {
-    
     if (!widget.devicesList.contains(device)) {
       setState(() {
         widget.devicesList.add(device);
@@ -34,6 +35,11 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     print('Run init State');
 
+    widget.flutterBlue.scanResults.listen((List<ScanResult> results) {
+      for (ScanResult r in results) {
+        print(r.rssi);
+      }
+    });
     widget.flutterBlue.connectedDevices
         .asStream()
         .listen((List<BluetoothDevice> devices) {
@@ -54,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
     widget.flutterBlue.startScan();
   }
 
-  ListView _buildListViewOfDevices() {
+  List<Container> _buildListViewOfDevices() {
     List<Container> containers = new List<Container>();
     for (BluetoothDevice device in widget.devicesList) {
       containers.add(
@@ -98,12 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(8),
-      children: <Widget>[
-        ...containers,
-      ],
-    );
+    return containers;
   }
 
   List<ButtonTheme> _buildReadWriteNotifyButton(
@@ -258,7 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  ListView _buildView() {
+  List<Widget> _buildView() {
     // if (_connectedDevice != null) {
     //   return _buildConnectDeviceView();
     // }
@@ -266,10 +267,40 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
+  Widget build(BuildContext context) {
+    print('build page');
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: <Widget>[
+            Container(
+              color: Colors.amber,
+              child: StreamBuilder<List<ScanResult>>(
+                stream: FlutterBlue.instance.scanResults,
+                initialData: [],
+                builder: (c, snapshot) => Column(
+                  children: snapshot.data
+                      .map(
+                        (r) => ScanResultTile(
+                          result: r,
+                          onTap: () => Navigator.of(context)
+                              .push(MaterialPageRoute(builder: (context) {
+                            r.device.connect();
+                            return DeviceScreen(device: r.device);
+                          })),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
+            ..._buildView(),
+          ],
         ),
-        body: _buildView(),
-      );
+      ),
+    );
+  }
 }
